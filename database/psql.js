@@ -1,4 +1,4 @@
-import pkg, { Query } from "pg";
+import pkg from "pg";
 const Pool = pkg.Pool;
 import "dotenv/config";
 import moment from "moment";
