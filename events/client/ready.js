@@ -6,6 +6,7 @@ class Event {
 
     async run() {
         const commandArray = client.slashCommands;
+        console.log(commandArray);
         client.application.commands.set(commandArray);
         client.user.setPresence(client.config.presence);
 

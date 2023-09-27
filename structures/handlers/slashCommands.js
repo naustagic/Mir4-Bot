@@ -29,7 +29,7 @@ class slashHandler {
         client.slashCommands.set(command.name, command);
         slashCommandsTable.addRow(name, "Success");
         
-        if (file=="print.js") {
+        if (file=="register.js") {
           console.log(slashCommandsTable.toString());
         }
       });
