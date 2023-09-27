@@ -28,7 +28,8 @@ class slashHandler {
 
         client.slashCommands.set(command.name, command);
         slashCommandsTable.addRow(name, "Success");
-        
+        console.log(client.slashCommands);
+
         if (file=="register.js") {
           console.log(slashCommandsTable.toString());
         }
