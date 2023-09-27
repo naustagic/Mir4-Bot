@@ -2,8 +2,6 @@ import pkg, { Query } from "pg";
 const Pool = pkg.Pool;
 import "dotenv/config";
 import moment from "moment";
-import { config } from "../config.js";
-import fs from "fs";
 
 class PSQL {
     constructor() {
@@ -85,7 +83,7 @@ class PSQL {
                     if (String(err).includes("Error 404")) {
                         const sql = "INSERT INTO Clans (clan_name) VALUES($1)";
                         this.query(sql, [clan.clan_name])
-                            .then(resolve(`Successfully added the Clan \"${clan.clan_name}\" to the Database!`))
+                            .then(resolve(`Successfully added Clan \"${clan.clan_name}\" to the Database!`))
                             .catch(err1 => reject(err1));
                     } else {
                         reject(err);
@@ -100,7 +98,7 @@ class PSQL {
                 .then(c => {
                     const sql = "DELETE FROM Clans WHERE id = $1";
                     this.query(sql, [c.id])
-                        .then(resolve(`Successfully removed the Clan \"${c.clan_name}\" from the Database!`))
+                        .then(resolve(`Successfully removed Clan \"${c.clan_name}\" from the Database!`))
                         .catch(err => reject(err));
                 })
                 .catch(err => reject(err));
@@ -131,7 +129,7 @@ class PSQL {
                     if (String(err).includes("Error 404")) {
                         const sql = "INSERT INTO players (user_id, name) VALUES($1, $2)";
                         this.query(sql, [player.id, player.username])
-                            .then(resolve(`Successfully added the User \"${player.username}\" to the Database!`))
+                            .then(resolve(`Successfully added User \"${player.username}\" to the Database!`))
                             .catch(err1 => reject(err1));
                     } else {
                         reject(err);
@@ -146,7 +144,7 @@ class PSQL {
                 .then(p => {
                     const sql = "DELETE FROM players WHERE id = $1 AND user_id = $2";
                     this.query(sql, [p.id, p.user_id])
-                        .then(resolve(`Successfully removed the User \"${p.name}\" from the Database!`))
+                        .then(resolve(`Successfully removed User \"${p.name}\" from the Database!`))
                         .catch(err => reject(err));
                 })
                 .catch(err => reject(err));
@@ -169,7 +167,7 @@ class PSQL {
     getCharacter(player, char) {
         return new Promise((resolve, reject) => {
             this.getPlayer(player)
-                .then(p => {
+                .then(() => {
                     if (!char) {
                         const sql = "SELECT * FROM characters WHERE user_id = $1";
                         this.query(sql, [player.id])
@@ -186,7 +184,16 @@ class PSQL {
                         this.query(sql, [char.id, player.id])
                             .then(results => {
                                 if (results.length===0) {
-                                    reject("Error 404: Character not found");
+                                    const sql2 = "SELECT * FROM characters WHERE user_id = $1";
+                                    this.query(sql, [player.id])
+                                        .then(result => {
+                                            if (result.length===0) {
+                                                reject("Error 404: No Characters found");
+                                            } else if (result.length===1) {
+                                                reject("Error 400: Forbidden");
+                                            }
+                                        })
+                                        .catch(err => reject(err));
                                 } else if (results.length===1) {
                                     resolve(results[0]);
                                 }
@@ -200,23 +207,27 @@ class PSQL {
 
     addCharacter(player, char) {
         return new Promise((resolve, reject) => {
-            this.getCharacter(player, char)
-                .then(reject("Error 409: Duplicate Character"))
-                .catch(err => {
-                    if (String(err).includes("Error 404")) {
-                        this.getClan({name: char.clan_name})
-                            .then(clan => {
-                                const date = moment().format("YYYY-MM-DD HH:mm:ss");
-                                const sql = "INSERT INTO characters VALUES($1, $2, $3, $4, $5, $6, $7, $8)";
-                                this.query(sql, [char.id, p.user_id, char.name, char.class_name, char.power, char.server_name, clan.id, date])
-                                    .then(resolve(`Successfully registered Character \"${char.name}\" for User \"${p.name}\"!`))
+            this.getClan({name: char.clan_name})
+                .then(() => {
+                    this.getCharacter(player, char)
+                        .then(reject("Error 409: Duplicate Character"))
+                        .catch(err => {
+                            if (String(err).includes("Error 404")) {
+                                this.getClan({name: char.clan_name})
+                                    .then(clan => {
+                                        const date = moment().format("YYYY-MM-DD HH:mm:ss");
+                                        const sql = "INSERT INTO characters VALUES($1, $2, $3, $4, $5, $6, $7, $8)";
+                                        this.query(sql, [char.id, p.user_id, char.name, char.class_name, char.power, char.server_name, clan.id, date])
+                                            .then(resolve(`Successfully registered Character \"${char.name}\"!`))
+                                            .catch(err1 => reject(err1));
+                                    })
                                     .catch(err1 => reject(err1));
-                            })
-                            .catch(err1 => reject(err1));
-                    } else {
-                        reject(err);
-                    }
-                });
+                            } else {
+                                reject(err);
+                            }
+                        });
+                })
+                .catch(reject("Error 400: Forbidden Clan"));
         });
     };
 
@@ -228,7 +239,7 @@ class PSQL {
                         .then(c => {
                             const sql = "DELETE FROM characters WHERE id = $1 AND user_id = $2";
                             this.query(sql, [c.id, p.user_id])
-                                .then(resolve(`Successfully removed Character \"${c.name}\" of User \"${p.name}\" from the Database!`))
+                                .then(resolve(`Successfully removed Character \"${c.name}\" from the Database!`))
                                 .catch(err => reject(err));
                         })
                         .catch(err => reject(err));
@@ -305,20 +316,13 @@ class PSQL {
             this.getCharacter(player, char)
                 .then(c => {
                     this.getPilot(player, user)
-                        .then(pilot => {
-                            if (pilot.char_id == c.id) {
-                                reject("Error 409: Duplicate Pilot");
-                            } else {
-                                const date = moment.format("YYYY-MM-DD HH:mm:ss");
-                                const sql = "INSERT INTO pilots VALUES($1)"
-                            }
-                        })
+                        .then(reject("Error 409: Duplicate Pilot"))
                         .catch(err => {
                             if (String(err).includes("Error 404")) {
                                 const date = moment().format("YYYY-MM-DD HH:mm:ss");
                                 const sql = "INSERT INTO pilots VALUES($1, $2, $3, $4)";
                                 this.query(sql, [user.id, c.id, player.id, date])
-                                    .then(resolve(`Successfully added Pilot \"${user.username}\" for User \"${player.username}\"`))
+                                    .then(resolve(`Successfully added Pilot \"${user.username}\"!`))
                                     .catch(err1 => reject(err1));
                             } else {
                                 reject(err);
@@ -329,13 +333,13 @@ class PSQL {
         });
     };
 
-    remPilot(player, user, char) {
+    remPilot(player, user) {
         return new Promise((resolve, reject) => {
-            this.getPilot(player, user, char)
-                .then(pilot => {
-                    const sql = "DELETE FROM pilots WHERE id = $1 AND user_id = $2 AND char_id = $3";
+            this.getPilot(player, user)
+                .then(() => {
+                    const sql = "DELETE FROM pilots WHERE id = $1 AND user_id = $2";
                     this.query(sql, [pilot.id, pilot.user_id, pilot.char_id])
-                        .then(resolve(`Successfully removed Pilot \"${user.username}\" of User \"${player.username}\"!`))
+                        .then(resolve(`Successfully removed Pilot \"${user.username}\"!`))
                         .catch(err => reject(err));
                 })
                 .catch(err => reject(err));
