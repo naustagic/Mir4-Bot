@@ -12,7 +12,8 @@ currently being supported with security updates.
 | Version | Supported          |
 | ------- | ------------------ |
 | 1.0     | :x:                |
-| 1.5     | :white_check_mark: |
+| 1.5     | :x:                |
+| 1.6     | :white_check_mark: |
 
 
 ## Reporting an Issue
