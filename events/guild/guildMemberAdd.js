@@ -7,8 +7,10 @@ module.exports = {
      * @param {import("../../index")} client
      */
     run: async (member, client) => {
-        client.database.addPlayer(member.user)
-            .then(console.log)
-            .catch(console.error);
+        if (!member.user.bot) {
+            client.database.addPlayer(member.user)
+                .then(console.log)
+                .catch(console.error);
+        }
     },
 };

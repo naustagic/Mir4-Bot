@@ -17,20 +17,31 @@ module.exports = {
                             client.database.remPlayer({id: player.user_id})
                                 .then(console.log)
                                 .catch(console.error);
+                        } else {
+                            const member = guild.members.cache.get(`${player.user_id}`)
+                            if (member.user.bot) {
+                                client.database.remPlayer({id: player.user_id})
+                                    .then(console.log)
+                                    .catch(console.error);
+                            }
                         }
                     });
                     guild.members.cache.forEach(member => {
-                        client.database.addPlayer(member.user)
+                        if (!member.user.bot) {
+                            client.database.addPlayer(member.user)
                             .then(console.log)
                             .catch(console.error);
+                        }
                     });
                 })
                 .catch(err => {
                     if (String(err).includes("Error 404")) {
                         guild.members.cache.forEach(member => {
-                            client.database.addPlayer(member.user)
+                            if (!member.user.bot) {
+                                client.database.addPlayer(member.user)
                                 .then(console.log)
                                 .catch(console.error);
+                            }
                         });
                     } else {
                         console.error(err);
