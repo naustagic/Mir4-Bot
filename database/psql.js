@@ -26,7 +26,7 @@ class PSQL {
                 if (err) {
                     reject(err);
                 } else {
-                    if (Array.isArray(results)) {
+                    if (Array.isArray(results.rows)) {
                         results = JSON.parse(JSON.stringify(results.rows));
                     }
                     resolve(results);
@@ -60,8 +60,8 @@ class PSQL {
                     })
                     .catch(err => reject(err));
             } else {
-                const sql = "SELECT * FROM Clans WHERE clan_name = $1";
-                this.query(sql, [clan.clan_name])
+                const sql = "SELECT * FROM Clans WHERE name = $1";
+                this.query(sql, [clan.name])
                     .then(results => {
                         if (results.length===0) {
                             reject("Error 404: Clan not found");
@@ -80,8 +80,8 @@ class PSQL {
                 .then(reject("Error 409: Duplicate Clan"))
                 .catch(err => {
                     if (String(err).includes("Error 404")) {
-                        const sql = "INSERT INTO Clans (clan_name) VALUES($1)";
-                        this.query(sql, [clan.clan_name])
+                        const sql = "INSERT INTO Clans (name) VALUES($1)";
+                        this.query(sql, [clan.name])
                             .then(resolve(`Successfully added Clan \"${clan.clan_name}\" to the Database!`))
                             .catch(err1 => reject(err1));
                     } else {
@@ -243,26 +243,22 @@ class PSQL {
     addCharacter(player, char) {
         return new Promise((resolve, reject) => {
             this.getClan({name: char.clan_name})
-                .then(() => {
+                .then((clan) => {
                     this.getCharacter(player, char)
-                        .then(reject("Error 409: Duplicate Character"))
+                        .then(console.log)
                         .catch(err => {
                             if (String(err).includes("Error 404")) {
-                                this.getClan({name: char.clan_name})
-                                    .then(clan => {
-                                        const date = moment().format("YYYY-MM-DD HH:mm:ss");
-                                        const sql = "INSERT INTO characters VALUES($1, $2, $3, $4, $5, $6, $7, $8)";
-                                        this.query(sql, [char.id, p.user_id, char.name, char.class_name, char.power, char.server_name, clan.id, date])
-                                            .then(resolve(`Successfully registered Character \"${char.name}\"!`))
-                                            .catch(err1 => reject(err1));
-                                    })
+                                const date = moment().format("YYYY-MM-DD HH:mm:ss");
+                                const sql = "INSERT INTO characters VALUES($1, $2, $3, $4, $5, $6, $7, $8)";
+                                this.query(sql, [char.id, player.id, char.name, char.class_name, char.power, char.server_name, clan.id, date])
+                                    .then(resolve(`Successfully registered Character \"${char.name}\"!`))
                                     .catch(err1 => reject(err1));
                             } else {
                                 reject(err);
                             }
                         });
                 })
-                .catch(reject("Error 400: Forbidden Clan"));
+                .catch(console.error);
         });
     };
 

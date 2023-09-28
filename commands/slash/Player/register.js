@@ -1,23 +1,27 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
+const axios = require('axios');
 
 function getCharacterData(name) {
     return new Promise(async (resolve, reject) => {
         const api_url = "https://api.mir4info.com/v5/search/";
-        const result = await fetch(api_url + name);
-        const text = await result.text();
-        const char = JSON.parse(text);
-        if (Array.isArray(char)) {
-            if (char.length===1) {
-                resolve(char[0]);
-            } else if (char.length>1) {
-                for (const character of char) {
-                    if (character.match_type=="exact") {
+        const result = await axios.get(api_url + name);
+        const text = await result.data;
+        if (Array.isArray(text)) {
+            if (text.length===1) {
+                const character = text[0]
+                resolve(character);
+            } else if (text.length>1) {
+                for (const character of text) {
+                    character.clan_name = character.clan_name.replace(/[\u0080-\uffff]/g, (char) => '\\u' + ('0000' + char.charCodeAt(0).toString(16)).slice(-4));
+                    if (character.match_type == "exact") {
                         resolve(character);
                     }
                 }
             }
-        } else if (char.error) {
-            reject(char.error);
+        } else if (text.error) {
+            reject(text.error);
+        } else {
+            reject(text);
         }
     });
 };
@@ -95,160 +99,120 @@ module.exports = {
             tower2: "1129258746854506687",
             tower3: "1130689120994349127"
         };
+        client.database.getCharacter(user)
+            .then(console.log)
+            .catch(console.error);
         getCharacterData(name)
             .then(char => {
-                client.database.getCharacter(user, char)
-                    .then(async () => {
-                        //Trigger if the given Character was found in the Database
+                client.database.addCharacter(user, char)
+                    .then(async (msg) => {
+                        console.log(msg);
+                        if (level>=95 && !level>120) {
+                            await member.roles.add(roles.tower1);
+                        }
+                        if (level>=115 && !level>130) {
+                            await member.roles.add(roles.tower2);
+                        }
+                        if (level<=120 && !level>140) {
+                            await member.roles.add(roles.tower3);
+                        }
+                        const class_role = await interaction.guild.roles.cache.find(r => r.name == `${char.class_name}`);
+                        const clan_role = await interaction.guild.roles.cache.find(r => r.name == `${char.clan_name}`);
+                        const server_role = await interaction.guild.roles.cache.find(r => r.name == `${char.server_name}`);
+                        if (!class_role) {
+                            interaction.guild.roles.create({
+                                name: char.class_name,
+                                reason: `Create missing Role: ${char.class_name}`
+                            })
+                                .then(async (role) => {
+                                    await member.roles.add(role.id);
+                                })
+                                .catch(console.error);
+                        } else {
+                            await member.roles.add(class_role.id);
+                        }
+                        if (!clan_role) {
+                            interaction.guild.roles.create({
+                                name: char.clan_name,
+                                reason: `Create missing Role: ${char.clan_name}`
+                            })
+                                .then(async (role) => {
+                                    await member.roles.add(role.id);
+                                })
+                                .catch(console.error);
+                        } else {
+                            await member.roles.add(clan_role.id);
+                        }
+                        if (!server_role) {
+                            interaction.guild.roles.create({
+                                name: char.server_name,
+                                reason: `Create missing Role: ${char.server_name}`
+                            })
+                                .then(async (role) => {
+                                    await member.roles.add(role.id);
+                                })
+                                .catch(console.error);
+                        } else {
+                            await member.roles.add(server_role.id);
+                        }
+
                         await interaction.reply({
                             embeds: [
                                 new EmbedBuilder()
-                                    .setColor("Red")
-                                    .setTitle("Error 409: Duplicate Character")
-                                    .setDescription("A Character with that Name is already registered!")
-                                    .setTimestamp()
-                            ],
-                            ephemeral: true
+                                    .setColor("Aqua")
+                                    .setTitle("Character Information")
+                                    .addFields(
+                                        {
+                                            name: "Name",
+                                            value: `\`${char.name}\``
+                                        },
+                                        {
+                                            name: "Class",
+                                            value: `\`${char.class_name}\``
+                                        },
+                                        {
+                                            name: "Power",
+                                            value: `\`${char.power}\``
+                                        },
+                                        {
+                                            name: "Region",
+                                            value: `\`${char.region_name}\``
+                                        },
+                                        {
+                                            name: "Clan",
+                                            value: `\`${char.clan_name}\``
+                                        }
+                                    )
+                                    .setThumbnail(client.class_icons[char.class_name])
+                                    .setImage(client.class_banners[char.class_name])
+                            ]
                         });
                     })
                     .catch(async (err) => {
-                        if (String(err).includes("Error 404")) {
-                            //Trigger if the Player does not have a Character
-                            client.database.addCharacter(user, char)
-                                .then(async () => {
-                                    //Trigger if the Character has been added to the Database
-                                    if (level>=95 && !level>120) {
-                                        await member.roles.add(roles.tower1);
-                                    }
-                                    if (level>=115 && !level>130) {
-                                        await member.roles.add(roles.tower2);
-                                    }
-                                    if (level<=120 && !level>140) {
-                                        await member.roles.add(roles.tower3);
-                                    }
-                                    const class_role = await interaction.guild.roles.cache.find(r => r.name == `${char.class_name}`);
-                                    const clan_role = await interaction.guild.roles.cache.find(r => r.name == `${char.clan_name}`);
-                                    const server_role = await interaction.guild.roles.cache.find(r => r.name == `${char.server_name}`);
-                                    if (!class_role) {
-                                        interaction.guild.roles.create({
-                                            name: char.class_name,
-                                            reason: `Create missing Role: ${char.class_name}`
-                                        })
-                                            .then(async (role) => {
-                                                await member.roles.add(role.id);
-                                            })
-                                            .catch(console.error);
-                                    } else {
-                                        await member.roles.add(class_role.id);
-                                    }
-                                    if (!clan_role) {
-                                        interaction.guild.roles.create({
-                                            name: char.clan_name,
-                                            reason: `Create missing Role: ${char.clan_name}`
-                                        })
-                                            .then(async (role) => {
-                                                await member.roles.add(role.id);
-                                            })
-                                            .catch(console.error);
-                                    } else {
-                                        await member.roles.add(clan_role.id);
-                                    }
-                                    if (!server_role) {
-                                        interaction.guild.roles.create({
-                                            name: char.server_name,
-                                            reason: `Create missing Role: ${char.server_name}`
-                                        })
-                                            .then(async (role) => {
-                                                await member.roles.add(role.id);
-                                            })
-                                            .catch(console.error);
-                                    } else {
-                                        await member.roles.add(server_role.id);
-                                    }
-
-                                    await interaction.reply({
-                                        embeds: [
-                                            new EmbedBuilder()
-                                                .setColor("Aqua")
-                                                .setTitle("Character Information")
-                                                .addFields(
-                                                    {
-                                                        name: "Name",
-                                                        value: `\`${char.name}\``
-                                                    },
-                                                    {
-                                                        name: "Class",
-                                                        value: `\`${char.class_name}\``
-                                                    },
-                                                    {
-                                                        name: "Power",
-                                                        value: `\`${char.power}\``
-                                                    },
-                                                    {
-                                                        name: "Region",
-                                                        value: `\`${char.region_name}\``
-                                                    },
-                                                    {
-                                                        name: "Clan",
-                                                        value: `\`${char.clan_name}\``
-                                                    }
-                                                )
-                                                .setThumbnail(client.class_icons[char.class_name])
-                                                .setImage(client.class_banners[char.class_name])
-                                        ]
-                                    });
-                                })
-                                .catch(async (err1) => {
-                                    //Trigger if there was an Error with trying to add the Character to the Database
-                                    if (String(err1).includes("Error 409")) {
-                                        await interaction.reply({
-                                            embeds: [
-                                                new EmbedBuilder()
-                                                    .setColor("Red")
-                                                    .setTitle("Error 409: Duplicate Character")
-                                                    .setDescription("A Character with that Name is already registered!")
-                                                    .setTimestamp()
-                                            ],
-                                            ephemeral: true
-                                        });
-                                    } else if (String(err1).includes("Error 400")) {
-                                        await interaction.reply({
-                                            embeds: [
-                                                new EmbedBuilder()
-                                                    .setColor("Red")
-                                                    .setTitle(`${err1}`)
-                                                    .setDescription("You may not register a Character that is not a member of a Clan in the Alliance!")
-                                                    .setTimestamp()
-                                            ],
-                                            ephemeral: true
-                                        });
-                                    } else {
-                                        await interaction.reply({
-                                            embeds: [
-                                                new EmbedBuilder()
-                                                    .setColor("Red")
-                                                    .setTitle("An Error occurred...")
-                                                    .setDescription(`${err}`)
-                                                    .setTimestamp()
-                                            ],
-                                            ephemeral: true
-                                        });
-                                    }
-                                })
+                        console.error(err);
+                        if (String(err).includes("Error 409")) {
+                            await interaction.reply({
+                                embeds: [
+                                    new EmbedBuilder()
+                                        .setColor("Red")
+                                        .setTitle("Error 409: Duplicate Character")
+                                        .setDescription("A Character with that Name is already registered!")
+                                        .setTimestamp()
+                                ],
+                                ephemeral: true
+                            });
                         } else if (String(err).includes("Error 400")) {
-                            //Trigger if the Player already has a Character
                             await interaction.reply({
                                 embeds: [
                                     new EmbedBuilder()
                                         .setColor("Red")
                                         .setTitle(`${err}`)
-                                        .setDescription("You may not register more than one Character!")
+                                        .setDescription("You may not register a Character that is not a member of a Clan in the Alliance!")
                                         .setTimestamp()
                                 ],
                                 ephemeral: true
                             });
                         } else {
-                            //Trigger if a Database Error occurred
                             await interaction.reply({
                                 embeds: [
                                     new EmbedBuilder()
