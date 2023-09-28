@@ -1,5 +1,5 @@
 const { glob } = require("glob");
-const { promisify } = require("util");
+const { promisify } = require("node:util");
 const promiseGlob = promisify(glob);
 const Ascii = require("ascii-table");
 /**
