@@ -6,7 +6,7 @@ function getCharacterData(name) {
         const result = await fetch(api_url + name);
         const text = await result.text();
         const char = JSON.parse(text);
-        if (char.isArray()) {
+        if (Array.isArray(char)) {
             if (char.length===1) {
                 resolve(char[0]);
             } else if (char.length>1) {
@@ -85,10 +85,11 @@ module.exports = {
     ],
 
     run: async(client, interaction) => {
+        const option = interaction.options;
         const member = interaction.member;
         const user = member.user;
-        const name = interaction.getString("name");
-        const level = interaction.getInteger("level");
+        const name = option.getString("name");
+        const level = option.getInteger("level");
         const roles = {
             tower1: "1130689026333085816",
             tower2: "1129258746854506687",

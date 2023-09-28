@@ -1,29 +1,30 @@
-const { glob } = require('glob');
-const { promisify } = require('util');
-const promiseGlob = promisify(glob);
 const Ascii = require('ascii-table');
+const fs = require("fs");
 /**
  * 
  * @param {import("../../index")} client 
  */
 module.exports = async (client) => {
     const slashCommandsTable = new Ascii("Slash Commands").setHeading("Name", "Status", "Reason");
-    (await promiseGlob(`${process.cwd().replace(/\\/g, "/")}/commands/slash/*/*.js`)).map(async (file) => {
-        const command = require(file);
-        const P = file.split("/");
-        let name;
+    const dirs = fs.readdirSync("./commands/slash");
+    for (const dir of dirs) {
+        const files = fs.readdirSync(`./commands/slash/${dir}`)
+        for (const file of files) {
+            const command = require(`../../commands/slash/${dir}/${file}`);
+            let name;
 
-        if (!command.name || !command.run) {
-            return slashCommandsTable.addRow(`${command.name || `${P[P.length - 1]}/${P[P.length - 2]}`}`, "Failed", "Missing Name/Run");
+            if (!command.name || !command.run) {
+                return slashCommandsTable.addRow(`${command.name || file}`, "Failed", "Missing Name/Run");
+            }
+
+            name = command.name;
+            if (command.nick) {
+                name += ` (${command.nick})`;
+            }
+
+            client.slashCommands.set(command.name, command);
+            slashCommandsTable.addRow(name, "Success");
         }
-
-        name = command.name;
-        if (command.nick) {
-            name += ` (${command.nick})`;
-        }
-
-        client.slashCommands.set(command.name, command);
-        slashCommandsTable.addRow(name, "Success");
-    });
+    }
     console.log(slashCommandsTable.toString());
 }
