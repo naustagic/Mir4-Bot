@@ -20,17 +20,21 @@ module.exports = {
                         }
                     });
                     guild.members.cache.forEach(member => {
-                        client.database.addPlayer(member.user)
+                        if (!member.user.bot) {
+                            client.database.addPlayer(member.user)
                             .then(console.log)
                             .catch(console.error);
+                        }
                     });
                 })
                 .catch(err => {
                     if (String(err).includes("Error 404")) {
                         guild.members.cache.forEach(member => {
-                            client.database.addPlayer(member.user)
+                            if (!member.user.bot) {
+                                client.database.addPlayer(member.user)
                                 .then(console.log)
                                 .catch(console.error);
+                            }
                         });
                     } else {
                         console.error(err);
