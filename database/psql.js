@@ -26,7 +26,7 @@ class PSQL {
                 if (err) {
                     reject(err);
                 } else {
-                    if (results.isArray()) {
+                    if (Array.isArray(results)) {
                         results = JSON.parse(JSON.stringify(results.rows));
                     }
                     resolve(results);
@@ -112,7 +112,7 @@ class PSQL {
                     .then(results => {
                         if (results.length===0) {
                             reject("Error 404: No Players found");
-                        } else {
+                        } else if (results.length>=1) {
                             resolve(results);
                         }
                     })

@@ -1,34 +1,35 @@
-const { glob } = require("glob");
-const { promisify } = require("node:util");
-const promiseGlob = promisify(glob);
 const Ascii = require("ascii-table");
+const fs = require("fs");
 /**
  * 
  * @param {import("../../index")} client 
  */
 module.exports = async (client) => {
     const eventsTable = new Ascii("Events").setHeading("Name", "Status", "Reason");
-    (await promiseGlob(`${process.cwd().replace(/\\/g, "/")}/events/*/*.js`)).map(async (file) => {
-        const event = require(file);
-        const P = file.split("/");
-        let name;
+    const dirs = fs.readdirSync("./events");
+    for (const dir of dirs) {
+        const files = fs.readdirSync(`./events/${dir}`);
+        for (const file of files) {
+            const event = require(`../../events/${dir}/${file}`);
+            let name;
 
-        if (!event.name || !event.run) {
-            return eventsTable.addRow(`${event.name || `${P[P.length - 1]}/${P[P.length - 2]}`}`, "Failed", "Missing Name/Run");
+            if (!event.name || !event.run) {
+                return eventsTable.addRow(`${event.name || file}`, "Failed", "Missing Name/Run");
+            }
+
+            name = event.name;
+            if (event.nick) {
+                name += ` (${event.nick})`;
+            }
+
+            if (event.once) {
+                client.once(event.name, (...args) => event.run(...args, client));
+            } else {
+                client.on(event.name, (...args) => event.run(...args, client));
+            }
+
+            eventsTable.addRow(name, "Success");
         }
-
-        name = event.name;
-        if (event.nick) {
-            name += ` (${event.nick})`;
-        }
-
-        if (event.once) {
-            client.once(event.name, (...args) => event.run(...args, client));
-        } else {
-            client.on(event.name, (...args) => event.run(...args, client));
-        }
-
-        eventsTable.addRow(name, "Success");
-    });
+    }
     console.log(eventsTable.toString());
 }

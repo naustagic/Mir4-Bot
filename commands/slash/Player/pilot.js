@@ -1,3 +1,4 @@
+const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 module.exports = {
     name: "pilot",
     description: "Pilot related Commands",
