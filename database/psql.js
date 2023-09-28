@@ -245,7 +245,7 @@ class PSQL {
             this.getClan({name: char.clan_name})
                 .then((clan) => {
                     this.getCharacter(player, char)
-                        .then(console.log)
+                        .then(() => reject("Error 409: Duplicate Character"))
                         .catch(err => {
                             if (String(err).includes("Error 404")) {
                                 const date = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -258,7 +258,7 @@ class PSQL {
                             }
                         });
                 })
-                .catch(console.error);
+                .catch(() => reject("Error 400: Forbidden Clan"));
         });
     };
 

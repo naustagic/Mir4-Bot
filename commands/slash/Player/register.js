@@ -99,9 +99,6 @@ module.exports = {
             tower2: "1129258746854506687",
             tower3: "1130689120994349127"
         };
-        client.database.getCharacter(user)
-            .then(console.log)
-            .catch(console.error);
         getCharacterData(name)
             .then(char => {
                 client.database.addCharacter(user, char)
@@ -202,16 +199,29 @@ module.exports = {
                                 ephemeral: true
                             });
                         } else if (String(err).includes("Error 400")) {
-                            await interaction.reply({
-                                embeds: [
-                                    new EmbedBuilder()
-                                        .setColor("Red")
-                                        .setTitle(`${err}`)
-                                        .setDescription("You may not register a Character that is not a member of a Clan in the Alliance!")
-                                        .setTimestamp()
-                                ],
-                                ephemeral: true
-                            });
+                            if (String(err).includes("Clan")) {
+                                await interaction.reply({
+                                    embeds: [
+                                        new EmbedBuilder()
+                                            .setColor("Red")
+                                            .setTitle(`${err}`)
+                                            .setDescription("You may not register a Character that is not a member of a Clan in the Alliance!")
+                                            .setTimestamp()
+                                    ],
+                                    ephemeral: true
+                                });
+                            } else {
+                                await interaction.reply({
+                                    embeds: [
+                                        new EmbedBuilder()
+                                            .setColor("Red")
+                                            .setTitle(`${err}`)
+                                            .setDescription("You may not register more than one Character!")
+                                            .setTimestamp()
+                                    ],
+                                    ephemeral: true
+                                });
+                            }
                         } else {
                             await interaction.reply({
                                 embeds: [
