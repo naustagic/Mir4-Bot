@@ -13,7 +13,8 @@ currently being supported with security updates.
 | ------- | ------------------ |
 | 1.0     | :x:                |
 | 1.5     | :x:                |
-| 1.6     | :white_check_mark: |
+| 1.6     | :x:                |
+| 1.7     | :white_check_mark: |
 
 
 ## Reporting an Issue
