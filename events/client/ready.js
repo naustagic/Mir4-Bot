@@ -17,6 +17,13 @@ module.exports = {
                             client.database.remPlayer({id: player.user_id})
                                 .then(console.log)
                                 .catch(console.error);
+                        } else {
+                            const member = guild.members.cache.get(`${player.user_id}`)
+                            if (member.user.bot) {
+                                client.database.remPlayer({id: player.user_id})
+                                    .then(console.log)
+                                    .catch(console.error);
+                            }
                         }
                     });
                     guild.members.cache.forEach(member => {
