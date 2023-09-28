@@ -1,40 +1,37 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
-class Command {
-    constructor() {
-        this.name = "pilot";
-        this.description = "Pilot related Commands";
-        this.options = [
-            {
-                name: "add",
-                description: "Designate a Pilot for your Character",
-                description_localizations: {
-                    "en-US": "Designate a Pilot for your character",
-                    "pt-BR": "Designar um Piloto para seu personagem",
-                    "es-ES": "Designar un Piloto para tu personaje",
-                    "zh-CN": "为您的角色指定飞行员",
-                    "ko": "캐릭터에 대한 파일럿 지정"
-                },
-                type: ApplicationCommandOptionType.Subcommand,
-                options: [
-                    {
-                        name: "user",
-                        description: "The pilot to add",
-                        description_localizations: {
-                            "en-US": "The pilot to add",
-                            "pt-BR": "O piloto para adicionar",
-                            "es-ES": "El piloto para agregar",
-                            "zh-CN": "要添加的飞行员",
-                            "ko": "추가 할 파일럿"
-                        },
-                        type: ApplicationCommandOptionType.User,
-                        required: true,
-                    },
-                ],
+module.exports = {
+    name: "pilot",
+    description: "Pilot related Commands",
+    options: [
+        {
+            name: "add",
+            description: "Designate a Pilot for your Character",
+            description_localizations: {
+                "en-US": "Designate a Pilot for your character",
+                "pt-BR": "Designar um Piloto para seu personagem",
+                "es-ES": "Designar un Piloto para tu personaje",
+                "zh-CN": "为您的角色指定飞行员",
+                "ko": "캐릭터에 대한 파일럿 지정"
             },
-        ];
-    };
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: "user",
+                    description: "The pilot to add",
+                    description_localizations: {
+                        "en-US": "The pilot to add",
+                        "pt-BR": "O piloto para adicionar",
+                        "es-ES": "El piloto para agregar",
+                        "zh-CN": "要添加的飞行员",
+                        "ko": "추가 할 파일럿"
+                    },
+                    type: ApplicationCommandOptionType.User,
+                    required: true,
+                },
+            ],
+        },
+    ],
 
-    async run(client, interaction) {
+    run: async(client, interaction) => {
         const member = interaction.member
         const user = member.user;
         const option = interaction.options;
@@ -60,6 +57,7 @@ class Command {
                             })
                             .catch(async (err) => {
                                 if (String(err).includes("Error 409")) {
+                                    //Trigger if the Player has a Pilot in the Database
                                     await interaction.reply({
                                         embeds: [
                                             new EmbedBuilder()
@@ -71,6 +69,7 @@ class Command {
                                         ephemeral: true
                                     });
                                 } else if (String(err).includes("Error 404") && String(err).includes("Character")) {
+                                    //Trigger if the Character could not be found in the Database
                                     await interaction.reply({
                                         embeds: [
                                             new EmbedBuilder()
@@ -82,6 +81,7 @@ class Command {
                                         ephemeral: true
                                     });
                                 } else {
+                                    //Trigger if a Database error occurred
                                     await interaction.reply({
                                         embeds: [
                                             new EmbedBuilder()
@@ -161,6 +161,5 @@ class Command {
                     });
             return;
         }
-    };
+    },
 };
-export default new Command();

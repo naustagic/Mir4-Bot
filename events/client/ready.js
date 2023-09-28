@@ -1,13 +1,12 @@
-import { client } from "../../index.js";
-class Event {
-    constructor() {
-        this.name = "ready";
-    };
-
-    async run() {
-        const commandArray = client.slashCommands;
-        console.log(commandArray);
-        client.application.commands.set(commandArray);
+module.exports = {
+    name: "ready",
+    /**
+     * 
+     * @param {import("../../index")} client 
+     */
+    run: (client) => {
+        const commandsArray = client.slashCommands;
+        client.application.commands.set(commandsArray);
         client.user.setPresence(client.config.presence);
 
         client.guilds.cache.forEach(guild => {
@@ -38,6 +37,5 @@ class Event {
                     }
                 });
         });
-    }
-}
-export default new Event();
+    },
+};

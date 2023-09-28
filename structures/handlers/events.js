@@ -1,39 +1,34 @@
-import Ascii from 'ascii-table';
-import fs from 'fs';
-import { client } from "../../index.js";
+const { glob } = require("glob");
+const { promisify } = require("util");
+const promiseGlob = promisify(glob);
+const Ascii = require("ascii-table");
+/**
+ * 
+ * @param {import("../../index")} client 
+ */
+module.exports = async (client) => {
+    const eventsTable = new Ascii("Events").setHeading("Name", "Status", "Reason");
+    (await promiseGlob(`${process.cwd().replace(/\\/g, "/")}/events/*/*.js`)).map(async (file) => {
+        const event = require(file);
+        const P = file.split("/");
+        let name;
 
-class eventHandler {
-    constructor() {};
+        if (!event.name || !event.run) {
+            return eventsTable.addRow(`${event.name || `${P[P.length - 1]}/${P[P.length - 2]}`}`, "Failed", "Missing Name/Run");
+        }
 
-    async run() {
-        const eventsTable = new Ascii('Events').setHeading('Name', 'Status', 'Reason');
-        const dirs = fs.readdirSync("./events");
-        dirs.forEach(dir => {
-            const files = fs.readdirSync(`./events/${dir}`);
-            files.forEach(async (file) => {
-                const module = await import(`../../events/${dir}/${file}`);
-                const event = module.default;
-                let name;
-                if (!event.name || !event.run) {
-                    return eventsTable.addRow(`${event.name || file}`, "Failed", "Missing Name/Run");
-                }
+        name = event.name;
+        if (event.nick) {
+            name += ` (${event.nick})`;
+        }
 
-                name = event.name;
-                if (event.nick) {
-                    name += ` (${event.nick})`;
-                }
+        if (event.once) {
+            client.once(event.name, (...args) => event.run(...args, client));
+        } else {
+            client.on(event.name, (...args) => event.run(...args, client));
+        }
 
-                if (event.once) {
-                    client.once(event.name, (...args) => event.run(...args, client));
-                } else {
-                    client.on(event.name, (...args) => event.run(...args, client));
-                }
-                eventsTable.addRow(name, "Success");
-                if (file=="slashHandler.js") {
-                    console.log(eventsTable.toString());
-                }
-            });
-        });
-    }
+        eventsTable.addRow(name, "Success");
+    });
+    console.log(eventsTable.toString());
 }
-export default new eventHandler();

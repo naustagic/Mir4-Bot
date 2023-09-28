@@ -1,40 +1,29 @@
-import Ascii from 'ascii-table';
-import fs from 'fs';
-import { client } from "../../index.js";
-class slashHandler {
-  constructor() {};
-  async run() {
-    const slashCommandsTable = new Ascii('Slash Commands').setHeading('Name', 'Status', 'Reason');
-    const dirs = fs.readdirSync("./commands/slash");
-    dirs.forEach(dir => {
-      const files = fs.readdirSync(`./commands/slash/${dir}`);
-      files.forEach(async (file) => {
-        const module = await import(`../../commands/slash/${dir}/${file}`);
-        const command = module.default;
+const { glob } = require('glob');
+const { promisify } = require('util');
+const promiseGlob = promisify(glob);
+const Ascii = require('ascii-table');
+/**
+ * 
+ * @param {import("../../index")} client 
+ */
+module.exports = async (client) => {
+    const slashCommandsTable = new Ascii("Slash Commands").setHeading("Name", "Status", "Reason");
+    (await promiseGlob(`${process.cwd().replace(/\\/g, "/")}/commands/slash/*/*.js`)).map(async (file) => {
+        const command = require(file);
+        const P = file.split("/");
         let name;
 
         if (!command.name || !command.run) {
-          return slashCommandsTable.addRow(`${command.name || file}`, "Failed", "Missing Name/Run");
+            return slashCommandsTable.addRow(`${command.name || `${P[P.length - 1]}/${P[P.length - 2]}`}`, "Failed", "Missing Name/Run");
         }
 
         name = command.name;
         if (command.nick) {
-          name += ` (${command.nick})`;
-        }
-
-        if (!command.enabled) {
-          return slashCommandsTable.addRow(`${name}`, "Failed", "Disabled");
+            name += ` (${command.nick})`;
         }
 
         client.slashCommands.set(command.name, command);
         slashCommandsTable.addRow(name, "Success");
-        console.log(client.slashCommands);
-
-        if (file=="register.js") {
-          console.log(slashCommandsTable.toString());
-        }
-      });
     });
-  }
+    console.log(slashCommandsTable.toString());
 }
-export default new slashHandler();

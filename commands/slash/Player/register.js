@@ -1,91 +1,90 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
-class Command {
-    constructor() {
-        this.name = "register";
-        this.name_localizations = {
-            "en-US": "register",
-            "pt-BR": "registrar",
-            "es-ES": "registrarse",
-            "zh-CN": "注册",
-            "ko": "등록"
-        };
-        this.description = "Registers your MIR4 Character",
-        this.description_localizations = {
-            "en-US": "Registers your MIR4 Character",
-            "pt-BR": "Registrar seu personagem no MIR4",
-            "es-ES": "Registrarse tu personaje de MIR4",
-            "zh-CN": "注册您的 MIR4 角色",
-            "ko": "MIR4 캐릭터 등록"
-        };
-        this.options = [
-            {
-                name: "name",
-                name_localizations: {
-                    "en-US": "name",
-                    "pt-BR": "nome",
-                    "es-ES": "nombre",
-                    "zh-CN": "名称",
-                    "ko": "이름"
-                },
-                description: "Your exact MIR4 Character Name",
-                description_localizations: {
-                    "en-US": "Your exact MIR4 Character Name",
-                    "pt-BR": "Nome exato do seu personagem no MIR4",
-                    "es-ES": "Tu nombre exacto de personaje de MIR4",
-                    "zh-CN": "您精确的MIR4角色名称",
-                    "ko": "정확한 MIR4 캐릭터 이름"
-                },
-                type: ApplicationCommandOptionType.String,
-                required: true,
-            },
-            {
-                name: "level",
-                name_localizations: {
-                    "en-US": "level",
-                    "pt-BR": "nível",
-                    "es-ES": "nivel",
-                    "zh-CN": "水平",
-                    "ko": "수평"
-                },
-                description: "Your MIR4 Character Level",
-                description_localizations: {
-                    "en-US": "Your MIR4 Character Level",
-                    "pt-BR": "Seu nível de personagem MIR4",
-                    "es-ES": "Tu nivel de personaje de MIR4",
-                    "zh-CN": "您的MIR4角色级别",
-                    "ko": "MIR4 캐릭터 레벨"
-                },
-                type: ApplicationCommandOptionType.Integer,
-                required: true,
-                min_value: 95,
-                max_value: 140,
-            },
-        ];
-    };
+const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 
-    getCharacterData(name) {
-        return new Promise(async (resolve, reject) => {
-            const api_url = "https://api.mir4info.com/v5/search/";
-            const result = await fetch(api_url + name);
-            const text = await result.text();
-            const char = JSON.parse(text);
-            if (char.isArray()) {
-                if (char.length===1) {
-                    resolve(char[0]);
-                } else if (char.length>1) {
-                    for (const character of char) {
-                        if (character.match_type=="exact") {
-                            resolve(character);
-                        }
+function getCharacterData(name) {
+    return new Promise(async (resolve, reject) => {
+        const api_url = "https://api.mir4info.com/v5/search/";
+        const result = await fetch(api_url + name);
+        const text = await result.text();
+        const char = JSON.parse(text);
+        if (char.isArray()) {
+            if (char.length===1) {
+                resolve(char[0]);
+            } else if (char.length>1) {
+                for (const character of char) {
+                    if (character.match_type=="exact") {
+                        resolve(character);
                     }
                 }
-            } else if (char.error) {
-                reject(char.error);
             }
-        });
-    };
+        } else if (char.error) {
+            reject(char.error);
+        }
+    });
+};
 
-    async run(client, interaction) {
+module.exports = {
+    name: "register",
+    name_localizations: {
+        "en-US": "register",
+        "pt-BR": "registrar",
+        "es-ES": "registrarse",
+        "zh-CN": "注册",
+        "ko": "등록"
+    },
+    description: "Registers your MIR4 Character",
+    description_localizations: {
+        "en-US": "Registers your MIR4 Character",
+        "pt-BR": "Registrar seu personagem no MIR4",
+        "es-ES": "Registrarse tu personaje de MIR4",
+        "zh-CN": "注册您的 MIR4 角色",
+        "ko": "MIR4 캐릭터 등록"
+    },
+    options: [
+        {
+            name: "name",
+            name_localizations: {
+                "en-US": "name",
+                "pt-BR": "nome",
+                "es-ES": "nombre",
+                "zh-CN": "名称",
+                "ko": "이름"
+            },
+            description: "Your exact MIR4 Character Name",
+            description_localizations: {
+                "en-US": "Your exact MIR4 Character Name",
+                "pt-BR": "Nome exato do seu personagem no MIR4",
+                "es-ES": "Tu nombre exacto de personaje de MIR4",
+                "zh-CN": "您精确的MIR4角色名称",
+                "ko": "정확한 MIR4 캐릭터 이름"
+            },
+            type: ApplicationCommandOptionType.String,
+            required: true,
+        },
+        {
+            name: "level",
+            name_localizations: {
+                "en-US": "level",
+                "pt-BR": "nível",
+                "es-ES": "nivel",
+                "zh-CN": "水平",
+                "ko": "수평"
+            },
+            description: "Your MIR4 Character Level",
+            description_localizations: {
+                "en-US": "Your MIR4 Character Level",
+                "pt-BR": "Seu nível de personagem MIR4",
+                "es-ES": "Tu nivel de personaje de MIR4",
+                "zh-CN": "您的MIR4角色级别",
+                "ko": "MIR4 캐릭터 레벨"
+            },
+            type: ApplicationCommandOptionType.Integer,
+            required: true,
+            min_value: 95,
+            max_value: 140,
+        },
+    ],
+
+    run: async(client, interaction) => {
         const member = interaction.member;
         const user = member.user;
         const name = interaction.getString("name");
@@ -95,7 +94,7 @@ class Command {
             tower2: "1129258746854506687",
             tower3: "1130689120994349127"
         };
-        this.getCharacterData(name)
+        getCharacterData(name)
             .then(char => {
                 client.database.getCharacter(user, char)
                     .then(async () => {
@@ -126,6 +125,46 @@ class Command {
                                     if (level<=120 && !level>140) {
                                         await member.roles.add(roles.tower3);
                                     }
+                                    const class_role = await interaction.guild.roles.cache.find(r => r.name == `${char.class_name}`);
+                                    const clan_role = await interaction.guild.roles.cache.find(r => r.name == `${char.clan_name}`);
+                                    const server_role = await interaction.guild.roles.cache.find(r => r.name == `${char.server_name}`);
+                                    if (!class_role) {
+                                        interaction.guild.roles.create({
+                                            name: char.class_name,
+                                            reason: `Create missing Role: ${char.class_name}`
+                                        })
+                                            .then(async (role) => {
+                                                await member.roles.add(role.id);
+                                            })
+                                            .catch(console.error);
+                                    } else {
+                                        await member.roles.add(class_role.id);
+                                    }
+                                    if (!clan_role) {
+                                        interaction.guild.roles.create({
+                                            name: char.clan_name,
+                                            reason: `Create missing Role: ${char.clan_name}`
+                                        })
+                                            .then(async (role) => {
+                                                await member.roles.add(role.id);
+                                            })
+                                            .catch(console.error);
+                                    } else {
+                                        await member.roles.add(clan_role.id);
+                                    }
+                                    if (!server_role) {
+                                        interaction.guild.roles.create({
+                                            name: char.server_name,
+                                            reason: `Create missing Role: ${char.server_name}`
+                                        })
+                                            .then(async (role) => {
+                                                await member.roles.add(role.id);
+                                            })
+                                            .catch(console.error);
+                                    } else {
+                                        await member.roles.add(server_role.id);
+                                    }
+
                                     await interaction.reply({
                                         embeds: [
                                             new EmbedBuilder()
@@ -133,7 +172,7 @@ class Command {
                                                 .setTitle("Character Information")
                                                 .addFields(
                                                     {
-                                                        name: "Nick",
+                                                        name: "Name",
                                                         value: `\`${char.name}\``
                                                     },
                                                     {
@@ -147,10 +186,6 @@ class Command {
                                                     {
                                                         name: "Region",
                                                         value: `\`${char.region_name}\``
-                                                    },
-                                                    {
-                                                        name: "Server",
-                                                        value: `\`${char.server_name}\``
                                                     },
                                                     {
                                                         name: "Clan",
@@ -198,8 +233,8 @@ class Command {
                                             ephemeral: true
                                         });
                                     }
-                                });
-                        } else if (String(err).includes("Error 400")){
+                                })
+                        } else if (String(err).includes("Error 400")) {
                             //Trigger if the Player already has a Character
                             await interaction.reply({
                                 embeds: [
@@ -237,7 +272,5 @@ class Command {
                     ephemeral: true
                 });
             });
-    }
+    },
 };
-
-export default new Command();
