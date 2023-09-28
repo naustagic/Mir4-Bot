@@ -1,11 +1,10 @@
-import pkg, { Query } from "pg";
-const Pool = pkg.Pool;
-import "dotenv/config";
-import moment from "moment";
+const pg = require("pg");
+require("dotenv").config()
+const moment = require("moment");
 
 class PSQL {
     constructor() {
-        this.pool = new Pool({
+        this.pool = new pg.Pool({
             user: process.env.PG_USER,
             host: process.env.PG_HOST,
             database: process.env.PG_NAME,
@@ -108,14 +107,50 @@ class PSQL {
     getPlayer(player) {
         return new Promise((resolve, reject) => {
             if (!player) {
-
+                const sql = "SELECT * FROM players";
+                this.query(sql)
+                    .then(results => {
+                        if (results.length===0) {
+                            reject("Error 404: No Players found");
+                        } else {
+                            resolve(results);
+                        }
+                    })
+                    .catch(err => reject(err));
             } else {
                 if (player.id && !player.user_id) {
-
+                    const sql = "SELECT * FROM players WHERE user_id = $1";
+                    this.query(sql, [player.id])
+                        .then(results => {
+                            if (results.length===0) {
+                                reject("Error 404: Player not found");
+                            } else if (results.length===1) {
+                                resolve(results[0]);
+                            }
+                        })
+                        .catch(err => reject(err));
                 } else if (player.id) {
-
+                    const sql = "SELECT * FROM players WHERE id = $1";
+                    this.query(sql, [player.id])
+                        .then(results => {
+                            if (results.length===0) {
+                                reject("Error 404: Player not found");
+                            } else if (results.length===1) {
+                                resolve(results[0]);
+                            }
+                        })
+                        .catch(err => reject(err));
                 } else if (player.user_id) {
-
+                    const sql = "SELECT * FROM players WHERE user_id = $1";
+                    this.query(sql, [player.user_id])
+                        .then(results => {
+                            if (results.length===0) {
+                                reject("Error 404: Player not found");
+                            } else if (results.length===1) {
+                                resolve(results[0]);
+                            }
+                        })
+                        .catch(err => reject(err));
                 }
             }
         });
@@ -185,7 +220,7 @@ class PSQL {
                             .then(results => {
                                 if (results.length===0) {
                                     const sql2 = "SELECT * FROM characters WHERE user_id = $1";
-                                    this.query(sql, [player.id])
+                                    this.query(sql2, [player.id])
                                         .then(result => {
                                             if (result.length===0) {
                                                 reject("Error 404: No Characters found");
@@ -347,4 +382,4 @@ class PSQL {
     };
 };
 const psql = new PSQL();
-export { psql };
+module.exports = psql;
