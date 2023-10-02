@@ -1,6 +1,13 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 module.exports = {
     name: "pilot",
+    name_localizations: {
+        "en-US": "pilot",
+        "pt-BR": "piloto",
+        "es-ES": "piloto",
+        "zh-CN": "飞行员",
+        "ko": "조종사"
+    },
     description: "Pilot related Commands",
     options: [
         {
