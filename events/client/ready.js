@@ -13,24 +13,17 @@ module.exports = {
             client.database.getPlayer()
                 .then(players => {
                     players.forEach(player => {
-                        if (!guild.members.cache.get(`${player.user_id}`)) {
+                        if (!guild.members.cache.get(player.user_id)) {
                             client.database.remPlayer({id: player.user_id})
                                 .then(console.log)
                                 .catch(console.error);
-                        } else {
-                            const member = guild.members.cache.get(`${player.user_id}`)
-                            if (member.user.bot) {
-                                client.database.remPlayer({id: player.user_id})
-                                    .then(console.log)
-                                    .catch(console.error);
-                            }
                         }
                     });
                     guild.members.cache.forEach(member => {
                         if (!member.user.bot) {
                             client.database.addPlayer(member.user)
-                            .then(console.log)
-                            .catch(console.error);
+                                .then(console.log)
+                                .catch(console.error);
                         }
                     });
                 })
