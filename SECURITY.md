@@ -20,7 +20,7 @@ currently being supported with security updates.
 
 ## Reporting an Issue
 
-If you encounter any issues or errors, please open a new [Issue](https://github.com/Julexar/MooMoo-Mir4/issues). 
+If you encounter any issues or errors, please open a new [Issue](https://github.com/Julexar/Mir4-Bot/issues). 
 Make sure to provide as much Information as possible as well as the steps needed to reproduce the Issue.
 
 Issues with unsupported Versions will be discarded.
