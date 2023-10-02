@@ -1,6 +1,6 @@
 {
   "name": "moomoo-mir4",
-  "version": "1.8",
+  "version": "1.9",
   "dependencies": {
     "ascii-table": "^0.0.9",
     "axios": "^1.5.1",

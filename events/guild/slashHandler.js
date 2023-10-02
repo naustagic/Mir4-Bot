@@ -11,7 +11,7 @@ module.exports = {
         if (interaction.isChatInputCommand()) {
             const command = client.slashCommands.get(interaction.commandName);
             if (!command) {
-                return interaction.reply({
+                return await interaction.reply({
                     embeds: [
                         new EmbedBuilder()
                             .setColor("Red")
@@ -25,7 +25,7 @@ module.exports = {
                 if (command.permissions) {
                     if (command.permissions.bot && command.permissions.bot.length && !interaction.channel.permissionsFor(interaction.guild.me).has(command.permissions.bot)) {
                         const perms = interaction.channel.permissionsFor(interaction.guild.me).missing(command.permissions.bot);
-                        return interaction.reply({
+                        return await interaction.reply({
                             embeds: [
                                 new EmbedBuilder()
                                     .setColor("Red")
