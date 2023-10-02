@@ -89,35 +89,58 @@ module.exports = {
     ],
 
     run: async(client, interaction) => {
+        const reply = await interaction.deferReply();
         const option = interaction.options;
         const member = interaction.member;
         const user = member.user;
         const name = option.getString("name");
         const level = option.getInteger("level");
-        const roles = {
-            tower1: "1130689026333085816",
-            tower2: "1129258746854506687",
-            tower3: "1130689120994349127"
-        };
+        const server = interaction.guild;
+        let roles = {
+            tower1: "1156764474284449802",
+            tower2: "1156764518991548486",
+            tower3: "1156764561152679966"
+        }
+        if (!server.roles.cache.find(r => r.name == "Torre 1") && !server.roles.cache.get(roles.tower1)) {
+            const role = await server.roles.create({
+                name: "Torre 1",
+                reason: "Add missing Role: Torre 1"
+            }).catch(console.error);
+            roles.tower1 = role.id;
+        }
+        if (!server.roles.cache.get(roles.tower2) && !server.roles.cache.get(roles.tower2)) {
+            const role = await server.roles.create({
+                name: "Torre 2",
+                reason: "Add missing Role: Torre 2"
+            }).catch(console.error);
+            roles.tower2 = role.id;
+        }
+        if (!server.roles.cache.get(roles.tower3) && !server.roles.cache.get(roles.tower3)) {
+            const role = await server.roles.create({
+                name: "Torre 3",
+                reason: "Add missing Role: Torre 3"
+            }).catch(console.error);
+            roles.tower3 = role.id;
+        }
         getCharacterData(name)
             .then(char => {
                 client.database.addCharacter(user, char)
                     .then(async (msg) => {
                         console.log(msg);
-                        if (level>=95 && !level>120) {
+                        if (level >= 95 && level <= 120) {
                             await member.roles.add(roles.tower1);
                         }
-                        if (level>=115 && !level>130) {
+                        if (level >= 115 && level <= 130) {
                             await member.roles.add(roles.tower2);
                         }
-                        if (level<=120 && !level>140) {
-                            await member.roles.add(roles.tower3);
+                        if (level >= 120 && level <= 140) {
+                            await member.roles.add(roles.tower3)
                         }
-                        const class_role = await interaction.guild.roles.cache.find(r => r.name == `${char.class_name}`);
-                        const clan_role = await interaction.guild.roles.cache.find(r => r.name == `${char.clan_name}`);
-                        const server_role = await interaction.guild.roles.cache.find(r => r.name == `${char.server_name}`);
+                        const class_role = await server.roles.cache.find(r => r.name == `${char.class_name}`);
+                        const clan_role = await server.roles.cache.find(r => r.name == `${char.clan_name}`);
+                        const server_role = await server.roles.cache.find(r => r.name == `${char.server_name}`);
                         if (!class_role) {
-                            interaction.guild.roles.create({
+                            server.roles.create({
                                 name: char.class_name,
                                 reason: `Create missing Role: ${char.class_name}`
                             })
@@ -129,7 +152,7 @@ module.exports = {
                             await member.roles.add(class_role.id);
                         }
                         if (!clan_role) {
-                            interaction.guild.roles.create({
+                            server.roles.create({
                                 name: char.clan_name,
                                 reason: `Create missing Role: ${char.clan_name}`
                             })
@@ -141,7 +164,7 @@ module.exports = {
                             await member.roles.add(clan_role.id);
                         }
                         if (!server_role) {
-                            interaction.guild.roles.create({
+                            server.roles.create({
                                 name: char.server_name,
                                 reason: `Create missing Role: ${char.server_name}`
                             })
@@ -152,8 +175,8 @@ module.exports = {
                         } else {
                             await member.roles.add(server_role.id);
                         }
-
-                        await interaction.reply({
+                        await member.setNickname(`${char.name}`);
+                        await reply.edit({
                             embeds: [
                                 new EmbedBuilder()
                                     .setColor("Aqua")
@@ -182,54 +205,60 @@ module.exports = {
                                     )
                                     .setThumbnail(client.class_icons[char.class_name])
                                     .setImage(client.class_banners[char.class_name])
+                                    .setTimestamp()
+                                    .setFooter({ text: "by Julexar"})
                             ]
                         });
                     })
                     .catch(async (err) => {
                         console.error(err);
                         if (String(err).includes("Error 409")) {
-                            await interaction.reply({
+                            await reply.edit({
                                 embeds: [
                                     new EmbedBuilder()
                                         .setColor("Red")
-                                        .setTitle("Error 409: Duplicate Character")
+                                        .setTitle(`${err}`)
                                         .setDescription("A Character with that Name is already registered!")
                                         .setTimestamp()
+                                        .setFooter({ text: "by Julexar"})
                                 ],
                                 ephemeral: true
                             });
                         } else if (String(err).includes("Error 400")) {
                             if (String(err).includes("Clan")) {
-                                await interaction.reply({
+                                await reply.edit({
                                     embeds: [
                                         new EmbedBuilder()
                                             .setColor("Red")
                                             .setTitle(`${err}`)
                                             .setDescription("You may not register a Character that is not a member of a Clan in the Alliance!")
                                             .setTimestamp()
+                                            .setFooter({ text: "by Julexar"})
                                     ],
                                     ephemeral: true
                                 });
                             } else {
-                                await interaction.reply({
+                                await reply.edit({
                                     embeds: [
                                         new EmbedBuilder()
                                             .setColor("Red")
                                             .setTitle(`${err}`)
                                             .setDescription("You may not register more than one Character!")
                                             .setTimestamp()
+                                            .setFooter({ text: "by Julexar"})
                                     ],
                                     ephemeral: true
                                 });
                             }
                         } else {
-                            await interaction.reply({
+                            await reply.edit({
                                 embeds: [
                                     new EmbedBuilder()
                                         .setColor("Red")
                                         .setTitle("An Error occurred...")
                                         .setDescription(`${err}`)
                                         .setTimestamp()
+                                        .setFooter({ text: "by Julexar"})
                                 ],
                                 ephemeral: true
                             });
@@ -237,12 +266,14 @@ module.exports = {
                     });
             })
             .catch(async (err) => {
-                await interaction.reply({
+                console.error(err);
+                await reply.edit({
                     embeds: [
                         new EmbedBuilder()
                             .setColor("Red")
                             .setDescription(`${err}`)
                             .setTimestamp()
+                            .setFooter({ text: "by Julexar"})
                     ],
                     ephemeral: true
                 });

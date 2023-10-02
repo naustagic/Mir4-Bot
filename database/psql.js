@@ -219,13 +219,22 @@ class PSQL {
                         this.query(sql, [char.id, player.id])
                             .then(results => {
                                 if (results.length===0) {
-                                    const sql2 = "SELECT * FROM characters WHERE user_id = $1";
-                                    this.query(sql2, [player.id])
+                                    const sql2 = "SELECT * FROM characters WHERE id = $1";
+                                    this.query(sql2, [char.id])
                                         .then(result => {
                                             if (result.length===0) {
-                                                reject("Error 404: No Characters found");
-                                            } else if (result.length===1) {
-                                                reject("Error 400: Forbidden");
+                                                const sql3 = "SELECT * FROM characters WHERE user_id = $1";
+                                                this.query(sql3, [player.id])
+                                                    .then(res => {
+                                                        if (res.length===0) {
+                                                            reject("Error 404: No Characters found");
+                                                        } else if (res.length>=1) {
+                                                            reject("Error 400: Forbidden");
+                                                        }
+                                                    })
+                                                    .catch(err => reject(err));
+                                            } else {
+                                                reject("Error 409: Duplicate Character");
                                             }
                                         })
                                         .catch(err => reject(err));
@@ -347,17 +356,21 @@ class PSQL {
             this.getCharacter(player, char)
                 .then(c => {
                     this.getPilot(player, user)
-                        .then(reject("Error 409: Duplicate Pilot"))
-                        .catch(err => {
-                            if (String(err).includes("Error 404")) {
-                                const date = moment().format("YYYY-MM-DD HH:mm:ss");
-                                const sql = "INSERT INTO pilots VALUES($1, $2, $3, $4)";
-                                this.query(sql, [user.id, c.id, player.id, date])
-                                    .then(resolve(`Successfully added Pilot \"${user.username}\"!`))
-                                    .catch(err1 => reject(err1));
-                            } else {
-                                reject(err);
-                            }
+                        .then(() => reject("Error 409: Duplicate Pilot"))
+                        .catch(() => {
+                            this.getCharacter(user)
+                                .then(() => reject("Error 400: Forbidden"))
+                                .catch(err => {
+                                    if (String(err).includes("Error 404")) {
+                                        const date = moment().format("YYYY-MM-DD HH:mm:ss");
+                                        const sql = "INSERT INTO pilots VALUES($1, $2, $3, $4)";
+                                        this.query(sql, [user.id, c.id, player.id, date])
+                                            .then(resolve(`Successfully added Pilot \"${user.username}\"!`))
+                                            .catch(err1 => reject(err1));
+                                    } else {
+                                        reject(err);
+                                    }
+                                });
                         });
                 })
                 .catch(err => reject(err));
@@ -369,7 +382,7 @@ class PSQL {
             this.getPilot(player, user)
                 .then(() => {
                     const sql = "DELETE FROM pilots WHERE id = $1 AND user_id = $2";
-                    this.query(sql, [pilot.id, pilot.user_id, pilot.char_id])
+                    this.query(sql, [user.id, player.id])
                         .then(resolve(`Successfully removed Pilot \"${user.username}\"!`))
                         .catch(err => reject(err));
                 })
