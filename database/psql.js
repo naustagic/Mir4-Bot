@@ -215,6 +215,9 @@ class PSQL {
                             })
                             .catch(err => reject(err));
                     } else {
+                        if (!user) {
+                            
+                        }
                         const sql = "SELECT * FROM characters WHERE id = $1 AND user_id = $2";
                         this.query(sql, [char.id, player.id])
                             .then(results => {
