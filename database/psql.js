@@ -74,6 +74,25 @@ class PSQL {
         });
     };
 
+    getClanMembers(clan) {
+        return new Promise((resolve, reject) => {
+            this.getClan(clan)
+                .then(c => {
+                    const sql = "SELECT COUNT(user_id) FROM characters WHERE clan_id = $1";
+                    this.query(sql, [c.id])
+                        .then(results => {
+                            if (results.length===0) {
+                                reject("Error 404: No Clan Members found");
+                            } else if (results.length===1) {
+                                resolve(results[0]);
+                            }
+                        })
+                        .catch(err => reject(err));
+                })
+                .catch(err => reject(err));
+        });
+    };
+
     addClan(clan) {
         return new Promise((resolve, reject) => {
             this.getClan(clan)
