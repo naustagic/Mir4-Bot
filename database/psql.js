@@ -228,6 +228,8 @@ class PSQL {
                             .then(results => {
                                 if (results.length===0) {
                                     reject("Error 404: No Characters found");
+                                } else if (results.length===1) {
+                                    resolve(results[0]);
                                 } else {
                                     resolve(results);
                                 }
