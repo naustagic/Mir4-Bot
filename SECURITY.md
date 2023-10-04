@@ -18,7 +18,8 @@ currently being supported with security updates.
 | 1.8     | :x:                |
 | 1.9     | :x:                |
 | 1.9.1   | :x:                |
-| 1.9.2   | :white_check_mark: |
+| 1.9.2   | :x:                |
+| 1.9.3   | :white_check_mark: |
 
 ## Reporting an Issue
 
