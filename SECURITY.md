@@ -14,7 +14,8 @@ Make sure to always check for the latest version in the releases here on GitHub.
 | 1.7     | :x:                |
 | 1.8     | :x:                |
 | 1.9     | :x:                |
-| 1.9.3   | :white_check_mark: |
+| 1.9.3   | :x:                |
+| 1.9.4   | :white_check_mark: |
 
 ## Reporting an Issue
 
