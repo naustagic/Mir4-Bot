@@ -1,9 +1,9 @@
 {
   "name": "mir4-bot",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "dependencies": {
     "ascii-table": "^0.0.9",
-    "axios": "^1.5.1",
+    "axios": "^1.6.1",
     "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
     "glob": "^10.3.10",
